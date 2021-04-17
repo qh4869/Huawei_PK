@@ -23,6 +23,8 @@
 
 import subprocess
 import sys
+import matplotlib.pyplot as plt
+import numpy as np
 
 HOST_NUM_LIMIT = 100000
 
@@ -328,28 +330,72 @@ def process_day_requests(access_0, access_1, answer_0, answer_1, day_requests):
             center_0.del_vm(vm_id)
             center_1.del_vm(vm_id)
 
+# ---数据分析---
+income_vec_0 = []
+income_vec_1 = []
+hardpay_vec_0 = []
+hardpay_vec_1 = []
+engpay_vec_0 = []
+engpay_vec_1 = []
+profit_vec_0 = []
+profit_vec_1 = []
 
 def simulate_on_day(player_0, player_1, day_requests, day):
     # 标准输入读报价
     prices_0 = read_player_prices(0, player_0, day_requests)
     prices_1 = read_player_prices(1, player_1, day_requests)
+
+    # -----统计收入-----
+    before_0 = center_0.profit
+    before_1 = center_1.profit
+
     # 比价确定虚拟机给谁，同时统计两个center的收入
     access_0 = compare_prices(player_0, center_0, prices_0, prices_1)
     access_1 = compare_prices(player_1, center_1, prices_1, prices_0)
     player_0.stdin.flush()
     player_1.stdin.flush()
+
+    # ---统计收入+硬件支出-----
+    income_0 = center_0.profit - before_0
+    income_1 = center_1.profit - before_1
+    income_vec_0.append(income_0)
+    income_vec_1.append(income_1)
+    before_0 = center_0.profit
+    before_1 = center_1.profit
+
     # 购买和迁移，统计购买服务器的开销
     answer_0 = pre_process_player_outputs(0, player_0, center_0, sum(access_0))
     answer_1 = pre_process_player_outputs(1, player_1, center_1, sum(access_1))
+
+    # ---统计硬件支出+功耗支出------
+    pay_0 = before_0 - center_0.profit
+    pay_1 = before_1 - center_1.profit
+    hardpay_vec_0.append(pay_0)
+    hardpay_vec_1.append(pay_1)
+    before_0 = center_0.profit
+    before_1 = center_1.profit
+
     # 部署
     process_day_requests(access_0, access_1, answer_0, answer_1, day_requests)
+
     # 统计功耗成本
     center_0.pay_energy_cost()
     center_1.pay_energy_cost()
+
+    # -- 统计功耗支出---
+    pay_0 = before_0 - center_0.profit
+    pay_1 = before_1 - center_1.profit
+    engpay_vec_0.append(pay_0)
+    engpay_vec_1.append(pay_1)
+
     # 输出
     print('day ' + str(day) + ': ')
     print('player 0 profit: ' + str(center_0.profit))
     print('player 1 profit: ' + str(center_1.profit))
+
+    # ---统计收益---
+    profit_vec_0.append(center_0.profit)
+    profit_vec_1.append(center_1.profit)
 
 
 def simulate(input_lines, player_0, player_1):
@@ -404,6 +450,82 @@ def main(argv):
     return_code_1 = player_1.wait()
     print('player 0 return code: ' + str(return_code_0))
     print('player 1 return code: ' + str(return_code_1))
+
+    # --画图预处理---
+    acc_hard_0 = []
+    acc_hard_1 = []
+    acc_eng_0 = []
+    acc_eng_1 = []
+    acc_income_0 = []
+    acc_income_1 = []
+    for x in hardpay_vec_0:
+        if acc_hard_0:
+            acc_hard_0.append(acc_hard_0[-1] + x)
+        else:
+            acc_hard_0.append(x)
+    for x in hardpay_vec_1:
+        if acc_hard_1:
+            acc_hard_1.append(acc_hard_1[-1] + x)
+        else:
+            acc_hard_1.append(x)
+    for x in engpay_vec_0:
+        if acc_eng_0:
+            acc_eng_0.append(acc_eng_0[-1] + x)
+        else:
+            acc_eng_0.append(x)
+    for x in engpay_vec_1:
+        if acc_eng_1:
+            acc_eng_1.append(acc_eng_1[-1] + x)
+        else:
+            acc_eng_1.append(x)
+    for x in income_vec_0:
+        if acc_income_0:
+            acc_income_0.append(acc_income_0[-1] + x)
+        else:
+            acc_income_0.append(x)
+    for x in income_vec_1:
+        if acc_income_1:
+            acc_income_1.append(acc_income_1[-1] + x)
+        else:
+            acc_income_1.append(x)
+
+    # ---画图---
+    plt.figure()
+    plt.plot(income_vec_0, color='red', label='player 0', zorder = 1)
+    plt.plot(income_vec_1, color='blue', label='player 1', zorder = 0)
+    plt.title('Income each day')
+    plt.legend()
+    plt.figure()
+    plt.plot(hardpay_vec_0, color='red', label='player 0', zorder = 1)
+    plt.plot(hardpay_vec_1, color='blue', label='player 1', zorder = 0)
+    plt.title('HardCost each day')
+    plt.legend()
+    plt.legend()
+    plt.figure()
+    plt.plot(engpay_vec_0, color='red', label='player 0', zorder = 1)
+    plt.plot(engpay_vec_1, color='blue', label='player 1', zorder = 0)
+    plt.title('EngCost each day')
+    plt.legend()
+    plt.figure()
+    plt.plot(profit_vec_0, color='red', label='player 0', zorder = 1)
+    plt.plot(profit_vec_1, color='blue', label='player 1', zorder = 0)
+    plt.title('Total profit')
+    plt.legend()
+    # plt.figure()
+    # plt.plot(acc_income_0, color='red', label='player 0', zorder = 1)
+    # plt.plot(acc_income_1, color='blue', label='player 1', zorder = 0)
+    # plt.title('total income')
+    # plt.legend()
+    plt.figure()
+    plt.plot(acc_income_0, color='red', linestyle=':', label='player-in 0', zorder = 1)
+    plt.plot(acc_income_1, color='blue', linestyle=':', label='player-in 1', zorder = 0)
+    plt.plot(acc_hard_0, color='red', label='player-hard 0', zorder = 1)
+    plt.plot(acc_hard_1, color='blue', label='player-hard 1', zorder = 0)
+    plt.plot(acc_eng_0, color='red', linestyle='--', label='player-eng 0', zorder = 1)
+    plt.plot(acc_eng_1, color='blue', linestyle='--', label='player-eng 1', zorder = 0)
+    plt.title('total income and cost')
+    plt.legend()
+    plt.show()
 
 
 if __name__ == "__main__":
