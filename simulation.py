@@ -330,17 +330,23 @@ def process_day_requests(access_0, access_1, answer_0, answer_1, day_requests):
 
 
 def simulate_on_day(player_0, player_1, day_requests, day):
+    # 标准输入读报价
     prices_0 = read_player_prices(0, player_0, day_requests)
     prices_1 = read_player_prices(1, player_1, day_requests)
+    # 比价确定虚拟机给谁，同时统计两个center的收入
     access_0 = compare_prices(player_0, center_0, prices_0, prices_1)
     access_1 = compare_prices(player_1, center_1, prices_1, prices_0)
     player_0.stdin.flush()
     player_1.stdin.flush()
+    # 购买和迁移，统计购买服务器的开销
     answer_0 = pre_process_player_outputs(0, player_0, center_0, sum(access_0))
     answer_1 = pre_process_player_outputs(1, player_1, center_1, sum(access_1))
+    # 部署
     process_day_requests(access_0, access_1, answer_0, answer_1, day_requests)
+    # 统计功耗成本
     center_0.pay_energy_cost()
     center_1.pay_energy_cost()
+    # 输出
     print('day ' + str(day) + ': ')
     print('player 0 profit: ' + str(center_0.profit))
     print('player 1 profit: ' + str(center_1.profit))
