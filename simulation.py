@@ -25,6 +25,7 @@ import subprocess
 import sys
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
 HOST_NUM_LIMIT = 100000
 
@@ -345,6 +346,16 @@ def simulate_on_day(player_0, player_1, day_requests, day):
     prices_0 = read_player_prices(0, player_0, day_requests)
     prices_1 = read_player_prices(1, player_1, day_requests)
 
+    # ---输出日志---
+    path = 'priceLog.txt'
+    if day == 0 and os.path.exists(path) is True:
+        os.remove(path)
+
+    with open(path, 'a') as f:
+        f.write('day----{0}---player_0 vs player_1\n'.format(day))
+        for i in range(len(prices_0)):
+            f.write('{0} \t vs \t {1} \n'.format(prices_0[i], prices_1[i]))
+
     # -----统计收入-----
     before_0 = center_0.profit
     before_1 = center_1.profit
@@ -491,24 +502,24 @@ def main(argv):
 
     # ---画图---
     plt.figure()
-    plt.plot(income_vec_0, color='red', label='player 0', zorder = 1)
-    plt.plot(income_vec_1, color='blue', label='player 1', zorder = 0)
+    plt.plot(income_vec_0, color='red', label='player 0', zorder = 0)
+    plt.plot(income_vec_1, color='blue', label='player 1', zorder = 1)
     plt.title('Income each day')
     plt.legend()
     plt.figure()
-    plt.plot(hardpay_vec_0, color='red', label='player 0', zorder = 1)
-    plt.plot(hardpay_vec_1, color='blue', label='player 1', zorder = 0)
+    plt.plot(hardpay_vec_0, color='red', label='player 0', zorder = 0)
+    plt.plot(hardpay_vec_1, color='blue', label='player 1', zorder = 1)
     plt.title('HardCost each day')
     plt.legend()
     plt.legend()
     plt.figure()
-    plt.plot(engpay_vec_0, color='red', label='player 0', zorder = 1)
-    plt.plot(engpay_vec_1, color='blue', label='player 1', zorder = 0)
+    plt.plot(engpay_vec_0, color='red', label='player 0', zorder = 0)
+    plt.plot(engpay_vec_1, color='blue', label='player 1', zorder = 1)
     plt.title('EngCost each day')
     plt.legend()
     plt.figure()
-    plt.plot(profit_vec_0, color='red', label='player 0', zorder = 1)
-    plt.plot(profit_vec_1, color='blue', label='player 1', zorder = 0)
+    plt.plot(profit_vec_0, color='red', label='player 0', zorder = 0)
+    plt.plot(profit_vec_1, color='blue', label='player 1', zorder = 1)
     plt.title('Total profit')
     plt.legend()
     # plt.figure()
@@ -517,12 +528,12 @@ def main(argv):
     # plt.title('total income')
     # plt.legend()
     plt.figure()
-    plt.plot(acc_income_0, color='red', linestyle=':', label='player-in 0', zorder = 1)
-    plt.plot(acc_income_1, color='blue', linestyle=':', label='player-in 1', zorder = 0)
-    plt.plot(acc_hard_0, color='red', label='player-hard 0', zorder = 1)
-    plt.plot(acc_hard_1, color='blue', label='player-hard 1', zorder = 0)
-    plt.plot(acc_eng_0, color='red', linestyle='--', label='player-eng 0', zorder = 1)
-    plt.plot(acc_eng_1, color='blue', linestyle='--', label='player-eng 1', zorder = 0)
+    plt.plot(acc_income_0, color='red', linestyle=':', label='player-in 0', zorder = 0)
+    plt.plot(acc_income_1, color='blue', linestyle=':', label='player-in 1', zorder = 1)
+    plt.plot(acc_hard_0, color='red', label='player-hard 0', zorder = 0)
+    plt.plot(acc_hard_1, color='blue', label='player-hard 1', zorder = 1)
+    plt.plot(acc_eng_0, color='red', linestyle='--', label='player-eng 0', zorder = 0)
+    plt.plot(acc_eng_1, color='blue', linestyle='--', label='player-eng 1', zorder = 1)
     plt.title('total income and cost')
     plt.legend()
     plt.show()
