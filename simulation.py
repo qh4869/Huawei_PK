@@ -188,32 +188,56 @@ def get_requests(input_lines):
 
 def read_player_prices(player_id, player, day_requests):
     prices = []
+    specials = []
     for request in day_requests:
         values = request.strip()[1:-1].split(',')
         if values[0] == 'add':
             vm_id = int(values[2])
             customer_price = int(values[4])
-            price = int(player.stdout.readline().decode().strip())
+            val = player.stdout.readline().decode().strip().split(',');
+            if len(val) == 2:
+                price = int(val[0])
+                special = True
+            else:
+                price = int(val[0])
+                special = False
+            #price = int(player.stdout.readline().decode().strip())
             prices.append(price)
+            specials.append(special)
             if price > customer_price or price < -1:
                 raise SimulationError(player_id, INVALID_PRICE(vm_id))
-    return prices
+    return prices, specials
 
 
-def compare_price(player, my_price, opp_price):
-    if my_price != -1 and (my_price <= opp_price or opp_price == -1):
-        player.stdin.write(('(1, ' + str(opp_price) + ')\n').encode())
-        return True
+def compare_price(player, my_price, opp_price, my_special, opp_special):
+    if my_special and opp_special:
+        if my_price != -1 and (my_price <= opp_price or opp_price == -1):
+            player.stdin.write(('(1, ' + str(opp_price) + ')\n').encode())
+            return True
+        else:
+            player.stdin.write(('(0, ' + str(opp_price) + ')\n').encode())
+            return False
+    elif my_special and not opp_price:
+        if my_price != -1:
+            player.stdin.write(('(1, ' + str(opp_price) + ')\n').encode())
+            return True
+        else:
+            player.stdin.write(('(0, ' + str(opp_price) + ')\n').encode())
+            return False
     else:
-        player.stdin.write(('(0, ' + str(opp_price) + ')\n').encode())
-        return False
+        if my_price != -1 and (my_price <= opp_price or opp_price == -1):
+            player.stdin.write(('(1, ' + str(opp_price) + ')\n').encode())
+            return True
+        else:
+            player.stdin.write(('(0, ' + str(opp_price) + ')\n').encode())
+            return False
 
 
-def compare_prices(player, center, my_prices, opp_prices):
+def compare_prices(player, center, my_prices, opp_prices, my_specials, opp_specials):
     access = []
     for index in range(len(my_prices)):
         access.append(
-            compare_price(player, my_prices[index], opp_prices[index]))
+            compare_price(player, my_prices[index], opp_prices[index], my_specials[index], opp_specials[index]))
         if access[-1]:
             center.profit += my_prices[index]
     return access
@@ -345,8 +369,8 @@ profit_vec_1 = []
 
 def simulate_on_day(player_0, player_1, day_requests, day):
     # 标准输入读报价
-    prices_0 = read_player_prices(0, player_0, day_requests)
-    prices_1 = read_player_prices(1, player_1, day_requests)
+    prices_0, specials_0 = read_player_prices(0, player_0, day_requests)
+    prices_1, specials_1 = read_player_prices(1, player_1, day_requests)
 
     # ---输出日志---
     path = 'priceLog.txt'
@@ -363,8 +387,8 @@ def simulate_on_day(player_0, player_1, day_requests, day):
     before_1 = center_1.profit
 
     # 比价确定虚拟机给谁，同时统计两个center的收入
-    access_0 = compare_prices(player_0, center_0, prices_0, prices_1)
-    access_1 = compare_prices(player_1, center_1, prices_1, prices_0)
+    access_0 = compare_prices(player_0, center_0, prices_0, prices_1, specials_0, specials_1)
+    access_1 = compare_prices(player_1, center_1, prices_1, prices_0, specials_1, specials_0)
     player_0.stdin.flush()
     player_1.stdin.flush()
 
