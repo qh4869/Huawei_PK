@@ -19,37 +19,64 @@ def get_profit(input_lines):
 
 def get_income_and_req(input_lines):
 	for line in input_lines:
-		value = line.strip().split()
+		value = line.strip().split(' ')
 		if len(value)==2 and value[0]=='Day':
 			daily_income_0 = 0
 			daily_income_1 = 0
 			daily_req_0 = 0
 			daily_req_1 = 0
 		elif len(value)==2:
-			value_0 = int(value[0])
-			value_1 = int(value[1])
+			val0 = value[0].split(',')
+			val1 = value[1].split(',')
 
-			if value_0 == -1 and value_1 == -1:
-				succ_0 = False
-				succ_1 = False
-			elif value_0 == -1 and value_1 != -1:
-				succ_0 = False
-				succ_1 = True
-			elif value_0 != -1 and value_1 == -1:
+
+			value_0 = int(val0[0])
+			value_1 = int(val1[0])
+
+			if len(val0) > 1 and len(val1) > 1:
+				if value_0 == -1 and value_1 == -1:
+					succ_0 = False
+					succ_1 = False
+				elif value_0 == -1 and value_1 != -1:
+					succ_0 = False
+					succ_1 = True
+				elif value_0 != -1 and value_1 == -1:
+					succ_0 = True
+					succ_1 = False
+				elif value_0 < value_1:
+					succ_0 = True
+					succ_1 = False
+				elif value_0 > value_1:
+					succ_0 = False
+					succ_1 = True
+				else:
+					succ_0 = True
+					succ_1 = True
+			elif len(val0) > 1 and len(val1) == 1:
 				succ_0 = True
 				succ_1 = False
-			elif value_0 < value_1:
-				succ_0 = True
-				succ_1 = False
-			elif value_0 > value_1:
+			elif len(val1) > 1 and len(val0) == 1:
 				succ_0 = False
 				succ_1 = True
 			else:
-				succ_0 = True
-				succ_1 = True
-
-			if len(player0_income)==738 and succ_1:
-				a = 1
+				if value_0 == -1 and value_1 == -1:
+					succ_0 = False
+					succ_1 = False
+				elif value_0 == -1 and value_1 != -1:
+					succ_0 = False
+					succ_1 = True
+				elif value_0 != -1 and value_1 == -1:
+					succ_0 = True
+					succ_1 = False
+				elif value_0 < value_1:
+					succ_0 = True
+					succ_1 = False
+				elif value_0 > value_1:
+					succ_0 = False
+					succ_1 = True
+				else:
+					succ_0 = True
+					succ_1 = True
 
 			if succ_0:
 				daily_income_0 += value_0
